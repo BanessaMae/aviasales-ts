@@ -1,134 +1,99 @@
-import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import axios, { AxiosResponse } from 'axios';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
-
-export const getData= createAsyncThunk(
-    'tickets/getData',
-    async  (counter:number, {rejectWithValue}) => {
-        const getUrl = await( await fetch ('https://aviasales-test-api.kata.academy/search')).json();
-        const url = `https://aviasales-test-api.kata.academy/tickets?searchId=${getUrl.searchId}`
-
+export const fetchSearchIDThunk = createAsyncThunk<
+  string,
+  undefined,
+  { rejectValue: number }
+>('tickets/fetchSearchIDThunk', async (_, { rejectWithValue }) => {
   try {
-    if (counter < 3) {
-      const responce = await fetch(url)
-      if (!responce.ok) {
-        throw new Error(`Server Error: ${responce.status}`)
-      }
-      const data = await responce.json()
-      return data
-    }
-    throw new Error(`Server Error!`)
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      return rejectWithValue([err.message, counter])
-    }
+    const response: AxiosResponse<{ searchId: string }> = await axios.get(
+      'https://aviasales-test-api.kata.academy/search',
+    );
+
+    return response.data.searchId;
+  } catch (error) {
+    return rejectWithValue(error.response.status as number);
   }
-})
+});
 
-export type dataSegmentsObj = {
-  origin: string
-  destination: string
-  date: string
-  duration: number
-  stops: string[]
-}
+export const fetchTicketsThunk = createAsyncThunk<
+  { tickets: ITicket[]; stop: boolean },
+  string,
+  { rejectValue: number }
+>(
+  'tickets/fetchTicketsThunk',
+  async (searchID, { rejectWithValue, dispatch }) => {
+    try {
+      const response: AxiosResponse<{ tickets: ITicket[]; stop: boolean }> =
+        await axios.get(
+          `https://aviasales-test-api.kata.academy/tickets?searchId=${searchID}`,
+        );
 
-export type dataObj = {
-  price: number
-  carrier: string
-  segments: [dataSegmentsObj, dataSegmentsObj]
-}
+      return response.data;
+    } catch (error) {
+      if (error.response.status === 500) {
+        dispatch(fetchTicketsThunk(searchID));
+      }
+      return rejectWithValue(error.response.status as number);
+    }
+  },
+);
 
-type data = {
-  tickets: dataObj[] | []
-  stop: boolean
-}
-
-type init = {
-  initData: dataObj[] | []
-  data: data
-  status: string
-  error: string | Error
-}
-
-const initialState: init = {
-  initData: [],
-  data: { tickets: [], stop: false },
-  status: 'loading',
-  error: '',
-}
+const initialState: ITicketsState = {
+  error: null,
+  loading: true,
+  searchID: null,
+  tickets: [],
+  ticketsOnPage: 5,
+} as ITicketsState;
 
 const ticketsSlice = createSlice({
   name: 'tickets',
   initialState,
   reducers: {
-    allTickets(state, action: PayloadAction<[[boolean, boolean, boolean, boolean, boolean], number]>) {
-      const [filterState, active] = action.payload
-      if (filterState[0] === true) {
-        const array = [...state.initData]
-        if (active === 0) {
-          state.data.tickets = activeFirstTab(array)
-        } else if (active === 1) {
-          state.data.tickets = activeSecondTab(array)
-        }
-      }
-    },
-    notAllTickets(state, action: PayloadAction<[[boolean, boolean, boolean, boolean, boolean], number]>) {
-      const [filterState, active] = action.payload
-      /* eslint-disable */
-      function length_0(x: dataObj) {
-        if (filterState[1]) return x.segments[0].stops.length === 0
-      }
-      function length_1(x: dataObj) {
-        if (filterState[2]) return x.segments[0].stops.length === 1
-      }
-      function length_2(x: dataObj) {
-        if (filterState[3]) return x.segments[0].stops.length === 2
-      }
-      function length_3(x: dataObj) {
-        if (filterState[4]) return x.segments[0].stops.length === 3
-      }
-      /* eslint-enable */
-      let array = [...state.initData]
-      array = array.filter((item) => length_0(item) || length_1(item) || length_2(item) || length_3(item))
-
-      if (active === 0) {
-        state.data.tickets = activeFirstTab(array)
-      } else if (active === 1) {
-        state.data.tickets = activeSecondTab(array)
-      }
+    addTicketsOnPage: (state) => {
+      state.ticketsOnPage += 5;
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(getData.pending, (state) => {
-      state.status = 'loading'
-    })
-    builder.addCase(getData.fulfilled, (state, action: PayloadAction<data>) => {
-      state.status = 'ok'
-      state.data = action.payload
-      state.initData = action.payload.tickets
-      state.error = ''
-    })
-    /* eslint-disable-next-line */
-    // @ts-expect-error
-    builder.addCase(getData.rejected, (state, action: PayloadAction<[string, number]>) => {
-      if (action.payload[1] >= 2) {
-        state.status = 'rejected'
-      } else {
-        state.status = 'loading'
-      }
-      if (typeof action.payload[0] === 'string') {
-        state.error = `${action.payload[0]} :: ${action.payload[1]}`
-      }
-    })
+    builder
+      .addCase(
+        fetchTicketsThunk.fulfilled,
+        (
+          state: ITicketsState,
+          action: PayloadAction<{ tickets: ITicket[]; stop: boolean }>,
+        ) => {
+          const { tickets: responseTickets, stop: responseLoading } =
+            action.payload;
+
+          state.tickets = [...state.tickets, ...responseTickets];
+          state.loading = !responseLoading;
+        },
+      )
+      .addCase(fetchTicketsThunk.rejected, (state: ITicketsState, action) => {
+        if (action.payload !== 500) {
+          state.loading = false;
+          state.error =
+            'Не удалось установить соединение с сервером при получении билетов';
+        }
+      })
+      .addCase(
+        fetchSearchIDThunk.fulfilled,
+        (state: ITicketsState, action: PayloadAction<string>) => {
+          state.searchID = action.payload;
+        },
+      )
+      .addCase(fetchSearchIDThunk.rejected, (state: ITicketsState, action) => {
+        if (action.payload !== 200) {
+          state.error =
+            'Не удалось установить соединение с сервером при получении Search ID';
+          state.loading = false;
+        }
+      });
   },
-})
+});
 
-function activeFirstTab(array: dataObj[]) {
-  return array.sort((a: dataObj, b: dataObj) => a.price - b.price)
-}
-function activeSecondTab(array: dataObj[]) {
-  return array.sort((a: dataObj, b: dataObj) => a.segments[0].duration - b.segments[0].duration)
-}
-
-export const { allTickets, notAllTickets } = ticketsSlice.actions
-export default ticketsSlice.reducer
+export const { addTicketsOnPage } = ticketsSlice.actions;
+export default ticketsSlice.reducer;

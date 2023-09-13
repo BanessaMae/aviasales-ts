@@ -1,103 +1,107 @@
-import React, { useEffect, useState } from 'react'
-import { Alert, Space } from 'antd';
+import React, { useEffect } from 'react';
+import { nanoid } from '@reduxjs/toolkit';
+import { useAppDispatch, useAppSelector } from '../../hooks/hooks.tsx';
+import {
+  addTicketsOnPage,
+  fetchSearchIDThunk,
+  fetchTicketsThunk,
+} from '../../store/ticketsSlice.tsx';
 
-import './tickets.list.scss'
-import { TicketCard } from '../tickets-card/tickets-card'
-import { Loading } from '../loading/loading'
-import { getData, allTickets, notAllTickets } from '../../store/ticketsSlice'
-import { useAppDispatch, useAppSelector } from '../../hooks/hooks'
-import { dataObj } from '../../store/ticketsSlice';
+import TicketCard from '../tickets-card/tickets-card.module.tsx';
 
-export function TicketsList() {
-  const [viewTickets, setViewTickets] = useState<dataObj[] | []>([])
-  const [viewCounter, setViewCounter] = useState<number>(5)
-  const [fetchCounter, setFetchCounter] = useState<number>(0)
-  const dispatch = useAppDispatch()
-  const { data, status, error } = useAppSelector((state) => state.tickets)
-  const filterState = useAppSelector((state) => state.filter.filter)
-  const tabsState = useAppSelector((state) => state.tabs.tabs)
+import  styles from './tickets.list.module.scss';
 
-  useEffect(() => {
-    async function get() {
-      const active = tabsState.findIndex((item) => item === true)
-      await dispatch(getData(fetchCounter))
-      await dispatch(allTickets([filterState, active]))
-    }
-    if (fetchCounter <= 3 && error && status === 'loading') {
-      setFetchCounter(fetchCounter + 1)
-      get()
-    }
-    if (!error && status === 'loading') {
-      setFetchCounter(fetchCounter + 1)
-      get()
-    }
+const TicketList: React.FC = () => {
+  const { tickets, loading, ticketsOnPage, error } = useAppSelector(
+    (state) => state.tickets,
+  );
 
-    /* eslint-disable-next-line */
-  }, [dispatch, error])
+  const { filters } = useAppSelector((state) => state.filters);
+
+  const { tabs } = useAppSelector((state) => state.tabs);
+
+  const { searchID } = useAppSelector((state) => state.tickets);
+
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    setViewTickets([...data.tickets].slice(0, viewCounter))
-  }, [data, viewCounter])
-
-  useEffect(() => {
-    const active = tabsState.findIndex((item) => item === true)
-    if (filterState[0]) {
-      dispatch(allTickets([filterState, active]))
-    } else {
-      dispatch(notAllTickets([filterState, active]))
-    }
-  }, [filterState, tabsState, dispatch])
-
-  function partTickets() {
-    if (status === 'loading') {
-      return <Loading />
-    }
-    if (status === 'ok') {
-      if (viewTickets.length !== 0) {
-        return viewTickets.map((item: dataObj) => (
-          <TicketCard
-            data={item}
-            key={`avia-${Math.random().toString(36).substring(2).toString()}${Math.random()
-              .toString(36)
-              .substring(2)
-              .toString()}`}
-          />
-        ))
+    if (loading) {
+      if (searchID === null) {
+        dispatch(fetchSearchIDThunk());
+      } else {
+        dispatch(fetchTicketsThunk(searchID));
       }
-      return <Space direction="vertical" style={{ width: '100%', }}>
-      <Alert  type="info" message="Рейсов, подходящих под заданные фильтры, не найдено" showIcon  />
-      </Space>
     }
-    if (status === 'rejected') {
-      return <Space direction="vertical" style={{ width: '100%', }}>
-        <Alert type="error"  message={`${error.toString().slice(0, -1)}Превышено количество попыток подключения` }showIcon  />
-    </Space>
-    }
-    return null
-  }
-  function showBtn() {
-    if (status === 'ok' && viewTickets.length !== 0) {
-      return (
-        <li className="tickets-load-btn-wrapper">
-          <button
-            type="button"
-            className="tickets-load-btn"
-            onClick={() => {
-              setViewCounter((s) => s + 5)
-            }}
-          >
-            Загрузить еще 5 билетов!
-          </button>
-        </li>
-      )
-    }
-    return null
-  }
+  }, [dispatch, tickets, searchID, loading]);
+
+  const filterTickets = () => {
+    let filteredTickets = tickets.filter(
+      (ticket: ITicket) =>
+        (filters.without &&
+          ticket.segments[0].stops.length === 0 &&
+          ticket.segments[1].stops.length === 0) ||
+        (filters.one &&
+          ticket.segments[0].stops.length === 1 &&
+          ticket.segments[1].stops.length === 1) ||
+        (filters.two &&
+          ticket.segments[0].stops.length === 2 &&
+          ticket.segments[1].stops.length === 2) ||
+        (filters.three &&
+          ticket.segments[0].stops.length === 3 &&
+          ticket.segments[1].stops.length === 3),
+    );
+
+    filteredTickets =
+      tabs === 'faster'
+        ? filteredTickets.sort(
+            (a, b) =>
+              a.segments[0].duration +
+              a.segments[1].duration -
+              (b.segments[0].duration + b.segments[1].duration),
+          )
+        : filteredTickets.sort((a, b) => a.price - b.price);
+
+    return filteredTickets;
+  };
 
   return (
-    <ul className="tickets-list">
-      {partTickets()}
-      {showBtn()}
-    </ul>
-  )
-}
+    <>
+      <ul className={styles['ticket-list']}>
+        {filterTickets().length === 0 ? (
+          <div className={styles.error}>
+            {error === null
+              ? 'Рейсов, подходящих под заданные фильтры, не найдено.'
+              : error}
+          </div>
+        ) : (
+          filterTickets().map((ticket, ticketIndex) => {
+            if (ticketIndex < ticketsOnPage) {
+              return (
+                <li key={nanoid()} className={styles['ticket-list__item']}>
+                  <TicketCard
+                    price={ticket.price}
+                    carrier={ticket.carrier}
+                    segmentsThere={ticket.segments[0]}
+                    segmentsBack={ticket.segments[1]}
+                  />
+                </li>
+              );
+            }
+
+            return null;
+          })
+        )}
+      </ul>
+      {filterTickets().length === 0 ? null : (
+        <button
+          onClick={() => dispatch(addTicketsOnPage())}
+          className={styles['ticket-list__button']}
+          type='button'>
+          Показать еще 5 билетов!
+        </button>
+      )}
+    </>
+  );
+};
+
+export default TicketList;

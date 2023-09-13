@@ -1,4 +1,4 @@
-import React from 'react'
+import { useEffect }from 'react'
 
 import './App.scss'
 import logo from '../../img/aviasales.svg'

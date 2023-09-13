@@ -1,0 +1,65 @@
+@import '../../components/styles/stules.scss';
+
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+}
+
+.ticket-list__item {
+  height: 184px;
+  box-shadow: (0px 2px 8px rgba(0, 0, 0, 0.1));
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+  gap: 0px 20px;
+  grid-template-areas:
+    'price . logo'
+    'title1-column1 title3-column2 title5-column3'
+    'description1-column1 description3-column2 description5-column3'
+    'title2-column1 title4-column2 title6-column3'
+    'description2-column1 description4-column2 description6-column3';
+}
+
+.error {
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0.5px;
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 20px;
+  color: $white;
+  background: rgb(119, 176, 223);
+  border-radius: 5px;
+}
+
+.ticket-list__button {
+  width: 95%;
+  background-color: $blue;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 20px;
+  margin-left: 35px;
+  margin-right: 20px;
+  color: $white;
+  text-align: center;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: background-color 0.3s;
+  border: none;
+
+  &:hover {
+    cursor: pointer;
+    background-color: $dark-blue;
+  }
+}

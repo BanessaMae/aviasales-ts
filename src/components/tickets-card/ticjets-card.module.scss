@@ -1,0 +1,89 @@
+@import '../../components/styles/stules.scss';
+
+.item__price {
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px;
+  color: $blue;
+  padding: 6px 0;
+}
+
+.item__logo {
+  grid-area: logo;
+  justify-self: end;
+  width: 110px;
+  height: 36px;
+}
+
+.item__title {
+  color: $light-gray;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.item__description {
+  color: $gray;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 21px;
+}
+
+.title1-column1 {
+  padding-top: 20px;
+  grid-area: title1-column1;
+}
+
+.title3-column2 {
+  padding-top: 20px;
+  grid-area: title3-column2;
+}
+
+.title5-column3 {
+  padding-top: 20px;
+  grid-area: title5-column3;
+}
+
+.title2-column1 {
+  align-self: end;
+  grid-area: title2-column1;
+}
+
+.title4-column2 {
+  align-self: end;
+  grid-area: title4-column2;
+}
+
+.title6-column3 {
+  align-self: end;
+  grid-area: title6-column3;
+}
+
+.description1-column1 {
+  grid-area: description1-column1;
+}
+
+.description3-column2 {
+  grid-area: description3-column2;
+}
+
+.description5-column3 {
+  grid-area: description5-column3;
+}
+
+.description2-column1 {
+  grid-area: description2-column1;
+}
+
+.description4-column2 {
+  grid-area: description4-column2;
+}
+
+.description6-column3 {
+  grid-area: description6-column3;
+}

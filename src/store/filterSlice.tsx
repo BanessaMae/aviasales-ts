@@ -1,39 +1,35 @@
-import { PayloadAction, createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
-type filterType = { filter: [boolean, boolean, boolean, boolean, boolean] }
-type returnFilterType = [boolean, boolean, boolean, boolean, boolean]
+const initialState: IFiltersState = {
+  allFilters: true,
+  filters: { without: true, one: true, two: true, three: true },
+} as IFiltersState;
 
-const initialState: filterType = { filter: [true, true, true, true, true] }
-
-const filterSlice = createSlice({
-  name: 'filter',
+const filtersSlice = createSlice({
+  name: 'filters',
   initialState,
   reducers: {
-    filterClickHandler(state, action: PayloadAction<string>) {
-      const getIndex = Number(action.payload.slice(-1)) - 1
-      const firstElem = state.filter[0]
+    toggleAllFilters: (state: IFiltersState) => {
+      state.allFilters = !state.allFilters;
 
-      if (getIndex === 0) {
-        state.filter = allClickHandler(firstElem)
-      } else if (firstElem && getIndex !== 0) {
-        state.filter[0] = false
-        state.filter[getIndex] = !state.filter[getIndex]
-      } else {
-        state.filter[getIndex] = !state.filter[getIndex]
-      }
-
-      if (JSON.stringify(state.filter) === JSON.stringify([false, true, true, true, true])) {
-        state.filter[0] = true
-      }
+      Object.keys(state.filters).forEach((stateKey) => {
+        state.filters[stateKey as keyof typeof state.filters] =
+          state.allFilters;
+      });
+    },
+    toggleAllFilter: (state: IFiltersState, action: PayloadAction<boolean>) => {
+      state.allFilters = action.payload;
+    },
+    toggleFilter: (
+      state,
+      action: PayloadAction<keyof IFiltersState['filters']>,
+    ) => {
+      state.filters[action.payload] = !state.filters[action.payload];
     },
   },
-})
+});
 
-const allClickHandler = (firstElem: boolean): returnFilterType => {
-  if (firstElem) {
-    return [false, false, false, false, false]
-  }
-  return [true, true, true, true, true]
-}
-export const { filterClickHandler } = filterSlice.actions
-export default filterSlice.reducer
+export const { toggleFilter, toggleAllFilters, toggleAllFilter } =
+  filtersSlice.actions;
+export default filtersSlice.reducer;

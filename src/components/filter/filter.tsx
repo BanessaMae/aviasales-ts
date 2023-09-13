@@ -1,14 +1,35 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import { useAppDispatch, useAppSelector } from '../../hooks/hooks'
-import { filterClickHandler } from '../../store/filterSlice'
+import { toggleFilter, toggleAllFilters, toggleAllFilter } from '../../store/filterSlice';
 
 import './filter.scss'
 
 export function Filter() {
   const dispatch = useAppDispatch()
-  const filterState = useAppSelector((state) => state.filter.filter)
-  const clickEvent = (htmlElem: Element) => dispatch(filterClickHandler(htmlElem.id))
+  const {
+    allFilters,
+    filters,
+    filters: { without, one, two, three },
+  } = useAppSelector((state) => state.filters);
+
+  useEffect(() => {
+    const activeFilters = Object.keys(filters).reduce(
+      (accumulator, stateKey) => {
+        if (filters[stateKey as keyof typeof filters] === true) {
+          accumulator += 1;
+        }
+        return accumulator;
+      },
+      0,
+    );
+    if (activeFilters < 4) {
+      dispatch(toggleAllFilter(false));
+    } else {
+      dispatch(toggleAllFilter(true));
+    }
+  }, [dispatch, filters]);
+  
   return (
     <div className="filter">
       <div className="filter-wrapper">
@@ -20,8 +41,8 @@ export function Filter() {
                 <input
                   type="checkbox"
                   id="filter-1"
-                  checked={filterState[0]}
-                  onChange={(e) => clickEvent(e.target as Element)}
+                  checked={allFilters}
+                  onChange={() => dispatch(toggleAllFilters())}
                 />
                 {/* eslint-disable-next-line */}
                 <label htmlFor="filter-1" />
@@ -33,8 +54,8 @@ export function Filter() {
                 <input
                   type="checkbox"
                   id="filter-2"
-                  checked={filterState[1]}
-                  onChange={(e) => clickEvent(e.target as Element)}
+                  checked={without}
+                  onChange={() => dispatch(toggleFilter('without'))}
                 />
                 {/* eslint-disable-next-line */}
                 <label htmlFor="filter-2" />
@@ -46,8 +67,8 @@ export function Filter() {
                 <input
                   type="checkbox"
                   id="filter-3"
-                  checked={filterState[2]}
-                  onChange={(e) => clickEvent(e.target as Element)}
+                  checked={one}
+                  onChange={() => dispatch(toggleFilter('one'))}
                 />
                 {/* eslint-disable-next-line */}
                 <label htmlFor="filter-3" />
@@ -59,8 +80,8 @@ export function Filter() {
                 <input
                   type="checkbox"
                   id="filter-4"
-                  checked={filterState[3]}
-                  onChange={(e) => clickEvent(e.target as Element)}
+                  checked={two}
+                  onChange={() => dispatch(toggleFilter('two'))}
                 />
                 {/* eslint-disable-next-line */}
                 <label htmlFor="filter-4" />
@@ -72,8 +93,8 @@ export function Filter() {
                 <input
                   type="checkbox"
                   id="filter-5"
-                  checked={filterState[4]}
-                  onChange={(e) => clickEvent(e.target as Element)}
+                  checked={three}
+                  onChange={() => dispatch(toggleFilter('three'))}
                 />
                 {/* eslint-disable-next-line */}
                 <label htmlFor="filter-5" />

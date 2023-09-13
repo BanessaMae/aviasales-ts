@@ -1,20 +1,17 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { configureStore } from '@reduxjs/toolkit';
+import filtersSlice from './filterSlice';
+import tabsSlice from './tabsSlice';
+import ticketsSlice from './ticketsSlice';
 
-import  ticketsReducer  from './ticketsSlice'
-import tabsReducer from './tabsSlice'
-import filterReducer from './filterSlice'
+export const store = configureStore({
+  reducer: {
+    filters: filtersSlice,
+    tabs: tabsSlice,
+    tickets: ticketsSlice,
+  },
+});
 
+export default store;
 
-const store = configureStore({
-    reducer: {
-      filter: filterReducer,
-      tabs: tabsReducer,
-      tickets: ticketsReducer,
-    }
-  }, 
-)
-
-export default store
-
-export type RootState = ReturnType<typeof store.getState>
-export type appDispatch = typeof store.dispatch
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;

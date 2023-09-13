@@ -1,0 +1,64 @@
+@import '../../components/styles/stules.scss';
+
+.tabs {
+  display: flex;
+  flex-direction: row;
+  margin: 0;
+  cursor: pointer;
+}
+
+.tab {
+  display: flex;
+  flex-grow: 1;
+  color: $gray;
+  background-color: $white;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 5px 0px 0px 5px;
+  outline: solid 1px #dfe5ec;
+  transition: background-color 0.3s;
+  cursor: pointer;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &:not(.active-tab):hover {
+    background-color: $light-blue;
+  }
+}
+
+.left-tab {
+  border-radius: 5px 0px 0px 5px;
+}
+
+.right-tab {
+  border-radius: 0px 5px 5px 0px;
+}
+.left-tab2 {
+  border-radius: 0px 5px 5px 0px;
+}
+
+.active-tab {
+  color: $white;
+  background-color: $blue;
+  outline: solid 1px $blue;
+  cursor: pointer;
+}
+
+.tab__label {
+  flex-grow: 1;
+  text-align: center;
+  padding: 15px;
+  cursor: pointer;
+}
+input{
+  display: none
+}
+li{
+  cursor: pointer;
+}
